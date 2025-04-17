@@ -8,6 +8,7 @@ import FormModalComponent, { FieldConfig } from "../components/common/FormModalC
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Libros }  from "../types/Libros";
+import axios from "axios";
 import { v4 as uuidv4 } from 'uuid';
 
 const Books = () => {
@@ -113,127 +114,7 @@ const Books = () => {
   
   const handleEdit = (book: Libros) => {
     setEditingUser(book);
-    setModalOpen(true);
-  };
 
-  const handleDelete = async (id: string | number) => {
-    await dispatch(deleteBook(id));
-  };
-
-  // const handleCreateOrUpdate = async (formData: Partial<Libros>) => {
-  //   const data = new FormData();
-  
-  //   for (const [key, value] of Object.entries(formData)) {
-  //     if (value instanceof File) {
-  //       console.log('value -->',value);
-  //       data.append(key, value);
-  //     } else if (typeof value === 'boolean') {
-  //       data.append(key, value ? 'true' : 'false');
-  //     } else if (typeof value === 'number') {
-  //       data.append(key, value.toString());
-  //     } else {
-  //       data.append(key, String(value));
-  //     }
-  //   }
-  //   console.log('data -->',data);
-  //   if (editingUser) {
-  //     data.append("id", editingUser.id); // necesario para updateBook
-  //     await dispatch(updateBook(data as FormData & { id: string }));
-  //   } else {
-  //     await dispatch(createBook(data));
-  //   }
-  
-  //   dispatch(
-  //     fetchBooks({
-  //       page: page + 1,
-  //       limit: rowsPerPage,
-  //       search: searchTerm,
-  //       sortBy,
-  //       sortDir: sortDirection,
-  //     })
-  //   );
-  //   setEditingUser(null);
-  // };
-  
-
-  // const handleCreateOrUpdate = async (formData: Partial<Libros>) => {
-  //   if (editingUser) {
-  //     await dispatch(updateBook({
-  //       id: editingUser.id,
-  //       titulo: formData.titulo!,
-  //       autor: formData.autor!,
-  //       genero_id: formData.genero_id!,
-  //       editorial_id: formData.editorial_id!,
-  //       precio: Number(formData.precio!),
-  //       disponible: formData.disponible! === true ? true : false,
-  //       imagen: formData.imagen!, // opcional, si querés permitir editar imagen
-  //     }));
-  //   } else {
-  //     const data = new FormData();
-  
-  //     for (const [key, value] of Object.entries(formData)) {
-  //       if (value instanceof File) {
-  //         data.append(key, value);
-  //       } else {
-  //         data.append(key, String(value));
-  //       }
-  //     }
-  
-  //     await dispatch(createBook(data));
-  //   }
-  
-  //   dispatch(
-  //     fetchBooks({
-  //       page: page + 1,
-  //       limit: rowsPerPage,
-  //       search: searchTerm,
-  //       sortBy,
-  //       sortDir: sortDirection,
-  //     })
-  //   );
-  //   setEditingUser(null);
-  // };
-  
-  const handleCreateOrUpdate = async (formData: Partial<Libros>) => {
-    let imagen = formData.imagen as string;
-
-    if (formData.imagen && typeof formData.imagen === "object" && "name" in formData.imagen) {
-      const ext = (formData.imagen as File).name.split('.').pop();
-      const newName = `${uuidv4()}.${ext}`;
-      const newPath = `/uploads/libros/${newName}`;
-    
-      // Copia en public (solo para desarrollo o previsualización rápida)
-      const reader = new FileReader();
-      reader.onload = () => {
-        const a = document.createElement("a");
-        a.href = reader.result as string;
-        a.download = newName;
-        a.style.display = "none";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      };
-      reader.readAsDataURL(formData.imagen as File);
-    
-      imagen = newPath;
-    }
-
-    const payload = {
-      titulo: formData.titulo!,
-      autor: formData.autor!,
-      genero_id: formData.genero_id!,
-      editorial_id: formData.editorial_id!,
-      precio: Number(formData.precio!),
-      disponible:  formData.disponible! === true ? true : false,
-      imagen,
-    };
-
-    if (editingUser) {
-      await dispatch(updateBook({...payload, id: editingUser.id }));
-    } else {
-      await dispatch(createBook(payload));
-    }
-    // 🔁 Volver a cargar data con filtros actuales
     dispatch(
       fetchBooks({
         page: page + 1,
@@ -243,6 +124,77 @@ const Books = () => {
         sortDir: sortDirection,
       })
     );
+
+    setModalOpen(true);
+  };
+
+  const handleDelete = async (id: string | number) => {
+    await dispatch(deleteBook(id));
+
+    dispatch(
+      fetchBooks({
+        page: page + 1,
+        limit: rowsPerPage,
+        search: searchTerm,
+        sortBy,
+        sortDir: sortDirection,
+      })
+    );
+    
+  };
+
+  const handleCreateOrUpdate = async (formData: Record<string, string | number | File>) => {
+    let imagenPath = typeof formData.imagen === "string" ? formData.imagen : "";
+
+    // Si es File, guardamos en /public/uploads/libros
+    if (formData.imagen instanceof File) {
+      const ext = formData.imagen.name.split(".").pop();
+      const filename = `${uuidv4()}.${ext}`;
+      imagenPath = `/uploads/libros/${filename}`;
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const blob = new Blob([reader.result as ArrayBuffer]);
+
+        try {
+          await axios.put(`http://localhost:4001/upload?filename=${filename}`, blob, {
+            headers: {
+              "Content-Type": "application/octet-stream",
+            },
+          });
+        } catch (error) {
+          console.error("Error al subir la imagen:", error);
+        }
+      };
+      reader.readAsArrayBuffer(formData.imagen);
+    }
+
+    const payload = {
+      titulo: String(formData.titulo),
+      autor: String(formData.autor),
+      genero_id: String(formData.genero_id),
+      editorial_id: String(formData.editorial_id),
+      precio: Number(formData.precio),
+      disponible: String(formData.disponible) === "true",
+      imagen: imagenPath,
+    };
+
+    if (editingUser) {
+      await dispatch(updateBook({ id: editingUser.id, ...payload }));
+    } else {
+      await dispatch(createBook(payload));
+    }
+
+    dispatch(
+      fetchBooks({
+        page: page + 1,
+        limit: rowsPerPage,
+        search: searchTerm,
+        sortBy,
+        sortDir: sortDirection,
+      })
+    );
+
     setEditingUser(null);
   };
 

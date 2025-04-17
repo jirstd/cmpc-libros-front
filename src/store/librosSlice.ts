@@ -60,15 +60,6 @@ export const createBook = createAsyncThunk("books/createBook", async (book: { ti
   return response.data;
 });
 
-// export const createBook = createAsyncThunk("books/createBook", async (book: FormData) => {
-//   const response = await api.post("/books", book, {
-//     headers: {
-//       "Content-Type": "multipart/form-data",
-//     },
-//   });
-//   return response.data;
-// });
-
 // Actualizar usuario
 export const updateBook = createAsyncThunk("books/updateBook", async (book: Libros) => {
   const data = {
@@ -83,15 +74,6 @@ export const updateBook = createAsyncThunk("books/updateBook", async (book: Libr
   const response = await api.put(`/books/${book.id}`, data);
   return response.data;
 });
-
-// export const updateBook = createAsyncThunk("books/updateBook", async (book: FormData & { id: string }) => {
-//   const response = await api.put(`/books/${book.get("id")}`, book, {
-//     headers: {
-//       "Content-Type": "multipart/form-data",
-//     },
-//   });
-//   return response.data;
-// });
 
 // Eliminar usuario con confirmación
 export const deleteBook = createAsyncThunk("books/deleteBook", async (id: string | number) => {

@@ -9,6 +9,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import { useEffect, useState } from "react";
+import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 
 export interface FieldConfig {
@@ -22,7 +23,7 @@ interface Props {
   open: boolean;
   title: string;
   fields: FieldConfig[];
-  defaultValues: Record<string, string | number | File>;
+  defaultValues: Record<string, string | number>;
   onClose: () => void;
   onSubmit: (values: Record<string, string | number | File>) => void;
   showDelete?: boolean;
@@ -40,6 +41,7 @@ const FormModalComponent = ({
   onDelete,
 }: Props) => {
   const [formValues, setFormValues] = useState<Record<string, string | number | File>>({});
+  const [preview, setPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) {
@@ -52,12 +54,43 @@ const FormModalComponent = ({
 
   useEffect(() => {
     setFormValues(defaultValues || {});
+    if (defaultValues.imagen && typeof defaultValues.imagen === "string") {
+      setPreview(defaultValues.imagen);
+    }
   }, [defaultValues]);
 
-  const handleChange = (name: string, value: string | number | File) => {
+  const handleChange = async (name: string, value: string | number | File) => {
+    // Si es un archivo, subimos primero
+    if (value instanceof File) {
+      const ext = value.name.split(".").pop();
+      const newFileName = `${uuidv4()}.${ext}`;
+      const ruta = `/uploads/libros/${newFileName}`;
+  
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", value, newFileName);
+  
+      try {
+        await axios.post("http://localhost:4001/upload", formDataUpload, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+  
+        setFormValues((prev) => ({
+          ...prev,
+          [name]: ruta, // solo enviamos el path relativo al backEnd
+        }));
+      } catch (error) {
+        console.error("Error al subir la imagen:", error);
+      }
+  
+      return;
+    }
+  
+    // Si no es archivo, actualizamos el campo directamente
     setFormValues((prev) => ({ ...prev, [name]: value }));
   };
-
+  
   const handleSubmit = () => {
     onSubmit(formValues);
     onClose();
@@ -66,30 +99,6 @@ const FormModalComponent = ({
   const handleDelete = () => {
     if (onDelete) onDelete();
     onClose();
-  };
-
-  const renderPreview = (value: string | number | File) => {
-    if (typeof value === "string" && value.startsWith("/uploads")) {
-      return (
-        <img
-          src={`http://localhost:3000${value}`}
-          alt="Imagen guardada"
-          style={{ width: 120, borderRadius: 8 }}
-        />
-      );
-    }
-
-    if (value instanceof File) {
-      return (
-        <img
-          src={URL.createObjectURL(value)}
-          alt="Preview"
-          style={{ width: 120, borderRadius: 8 }}
-        />
-      );
-    }
-
-    return null;
   };
 
   return (
@@ -107,19 +116,15 @@ const FormModalComponent = ({
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      const ext = file.name.split(".").pop();
-                      const newFileName = `${uuidv4()}.${ext}`;
-                      const newPath = `/uploads/libros/${newFileName}`;
-                      // Guardamos directamente el path, y el File para preview
-                      setFormValues((prev) => ({
-                        ...prev,
-                        [field.name]: file,
-                        [`${field.name}_path`]: newPath,
-                      }));
+                      handleChange(field.name, file);
                     }
                   }}
                 />
-                <Box mt={1}>{renderPreview(formValues[field.name])}</Box>
+                {preview && (
+                  <Box mt={1}>
+                    <img src={preview} alt="Preview" style={{ width: "120px", borderRadius: 8 }} />
+                  </Box>
+                )}
               </Box>
             ) : (
               <TextField
