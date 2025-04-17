@@ -75,27 +75,22 @@ Esto inicia solo el contenedor del frontend en:
 http://localhost:5173
 ```
 
-Contenido del archivo `docker-compose.yml` para el **frontend**:
+### 🖼 Servidor de subida de imágenes
 
-```yaml
-version: '3.8'
+Además del frontend, el sistema incluye un pequeño servidor Express que guarda las imágenes localmente en `public/uploads/libros`.
 
-services:
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    environment:
-      - VITE_API_URL=http://localhost:3000
-    command: npm run dev
-```
+Este corre en `http://localhost:4001/upload` y se inicia automáticamente con:
+
+```bash
+npm run dev
 
 ---
+
+### 🐳 Levantar el entorno con Docker
+
+```bash
+docker-compose up --build
+```
 
 ## 🔐 Credenciales de prueba
 

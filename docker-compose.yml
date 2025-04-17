@@ -6,8 +6,20 @@ services:
     container_name: cmpc_frontend
     ports:
       - "5173:5173"
-    environment:
-      - VITE_API_URL=http://localhost:3000
     volumes:
       - .:/app
       - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:3000
+    command: npm run dev
+
+  upload-server:
+    image: node:18
+    container_name: cmpc_upload_server
+    working_dir: /app
+    volumes:
+      - ./scripts:/app/scripts
+      - ./public/uploads:/app/public/uploads
+    command: ["node", "scripts/upload-server.cjs"]
+    ports:
+      - "4001:4001"
