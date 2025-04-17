@@ -55,42 +55,43 @@ export const fetchBooks = createAsyncThunk(
 );
 
 // Crear usuario con `roleId: null`
-// export const createBook = createAsyncThunk("books/createBook", async (book: { titulo: string; autor: string; genero_id: string; editorial_id: string; precio: number; disponible: boolean }) => {
-//   const response = await api.post("/books", book);
-//   return response.data;
-// });
-
-export const createBook = createAsyncThunk("books/createBook", async (book: FormData) => {
-  const response = await api.post("/books", book, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+export const createBook = createAsyncThunk("books/createBook", async (book: { titulo: string; autor: string; genero_id: string; editorial_id: string; precio: number; disponible: boolean, imagen: string }) => {
+  const response = await api.post("/books", book);
   return response.data;
 });
+
+// export const createBook = createAsyncThunk("books/createBook", async (book: FormData) => {
+//   const response = await api.post("/books", book, {
+//     headers: {
+//       "Content-Type": "multipart/form-data",
+//     },
+//   });
+//   return response.data;
+// });
 
 // Actualizar usuario
-// export const updateBook = createAsyncThunk("books/updateBook", async (book: Libros) => {
-//   const data = {
-//     titulo: book.titulo,
-//     autor: book.autor,
-//     genero_id: book.genero_id,
-//     editorial_id: book.editorial_id,
-//     precio: book.precio,
-//     disponible: book.disponible
-//   }
-//   const response = await api.put(`/books/${book.id}`, data);
-//   return response.data;
-// });
-
-export const updateBook = createAsyncThunk("books/updateBook", async (book: FormData & { id: string }) => {
-  const response = await api.put(`/books/${book.get("id")}`, book, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+export const updateBook = createAsyncThunk("books/updateBook", async (book: Libros) => {
+  const data = {
+    titulo: book.titulo,
+    autor: book.autor,
+    genero_id: book.genero_id,
+    editorial_id: book.editorial_id,
+    precio: book.precio,
+    disponible: book.disponible,
+    imagen: book.imagen,
+  }
+  const response = await api.put(`/books/${book.id}`, data);
   return response.data;
 });
+
+// export const updateBook = createAsyncThunk("books/updateBook", async (book: FormData & { id: string }) => {
+//   const response = await api.put(`/books/${book.get("id")}`, book, {
+//     headers: {
+//       "Content-Type": "multipart/form-data",
+//     },
+//   });
+//   return response.data;
+// });
 
 // Eliminar usuario con confirmación
 export const deleteBook = createAsyncThunk("books/deleteBook", async (id: string | number) => {

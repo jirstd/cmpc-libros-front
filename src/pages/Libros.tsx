@@ -8,6 +8,7 @@ import FormModalComponent, { FieldConfig } from "../components/common/FormModalC
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Libros }  from "../types/Libros";
+import { v4 as uuidv4 } from 'uuid';
 
 const Books = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -47,21 +48,16 @@ const Books = () => {
     {
       key: "imagen",
       label: "Portada",
-      render: (_, row) => {
-        const imagenUrl = typeof row.imagen === "string" && row.imagen.startsWith("/uploads/")
-          ? `http://localhost:3000${row.imagen}`
-          : null;
-    
-        return imagenUrl ? (
+      render: (_, row) =>
+        row.imagen ? (
           <img
-            src={imagenUrl}
+            src={`http://localhost:5173${row.imagen}`}
             alt="Portada"
             style={{ width: 60, borderRadius: 4 }}
           />
         ) : (
           "—"
-        );
-      }
+        ),
     },
     { key: "titulo", label: "Nombre" },
     { key: "autor", label: "Autor" },
@@ -76,21 +72,41 @@ const Books = () => {
     { label: "No", value: "false" },
   ];
 
-  const formFields: FieldConfig[] = editingUser
-  ? [
+  // const formFields: FieldConfig[] = editingUser
+  // ? [
+  //   { name: "imagen", label: "Imagen", type: "file" },
+  //   { name: "titulo", label: "Nombre", type: "text" },
+  //   { name: "autor", label: "Autor", type: "text" },
+  //   { name: "genero_id", label: "Género", type: "select", options: genres.map((g) => ({ label: g.nombre, value: g.id })) },
+  //   { name: "editorial_id", label: "Editorial", type: "select", options: publishers.map((p) => ({ label: p.nombre, value: p.id })) },
+  //   { name: "precio", label: "Precio", type: "number" },
+  //   { name: "disponible", label: "Disponible", type: "select", options: availebleOptions },
+  // ] : [
+  //   { name: "imagen", label: "Imagen", type: "file" },
+  //   { name: "titulo", label: "Nombre", type: "text" },
+  //   { name: "autor", label: "Autor", type: "text" },
+  //   { name: "genero_id", label: "Género", type: "select", options: genres.map((g) => ({ label: g.nombre, value: g.id })) },
+  //   { name: "editorial_id", label: "Editorial", type: "select", options: publishers.map((p) => ({ label: p.nombre, value: p.id })) },
+  //   { name: "precio", label: "Precio", type: "number" },
+  //   { name: "disponible", label: "Disponible", type: "select", options: availebleOptions },
+  // ];
+
+  const formFields: FieldConfig[] = [
     { name: "imagen", label: "Imagen", type: "file" },
     { name: "titulo", label: "Nombre", type: "text" },
     { name: "autor", label: "Autor", type: "text" },
-    { name: "genero_id", label: "Género", type: "select", options: genres.map((g) => ({ label: g.nombre, value: g.id })) },
-    { name: "editorial_id", label: "Editorial", type: "select", options: publishers.map((p) => ({ label: p.nombre, value: p.id })) },
-    { name: "precio", label: "Precio", type: "number" },
-    { name: "disponible", label: "Disponible", type: "select", options: availebleOptions },
-  ] : [
-    { name: "imagen", label: "Imagen", type: "file" },
-    { name: "titulo", label: "Nombre", type: "text" },
-    { name: "autor", label: "Autor", type: "text" },
-    { name: "genero_id", label: "Género", type: "select", options: genres.map((g) => ({ label: g.nombre, value: g.id })) },
-    { name: "editorial_id", label: "Editorial", type: "select", options: publishers.map((p) => ({ label: p.nombre, value: p.id })) },
+    {
+      name: "genero_id",
+      label: "Género",
+      type: "select",
+      options: genres.map((g) => ({ label: g.nombre, value: g.id })),
+    },
+    {
+      name: "editorial_id",
+      label: "Editorial",
+      type: "select",
+      options: publishers.map((p) => ({ label: p.nombre, value: p.id })),
+    },
     { name: "precio", label: "Precio", type: "number" },
     { name: "disponible", label: "Disponible", type: "select", options: availebleOptions },
   ];
@@ -104,40 +120,40 @@ const Books = () => {
     await dispatch(deleteBook(id));
   };
 
-  const handleCreateOrUpdate = async (formData: Partial<Libros>) => {
-    const data = new FormData();
+  // const handleCreateOrUpdate = async (formData: Partial<Libros>) => {
+  //   const data = new FormData();
   
-    for (const [key, value] of Object.entries(formData)) {
-      if (value instanceof File) {
-        console.log('value -->',value);
-        data.append(key, value);
-      } else if (typeof value === 'boolean') {
-        data.append(key, value ? 'true' : 'false');
-      } else if (typeof value === 'number') {
-        data.append(key, value.toString());
-      } else {
-        data.append(key, String(value));
-      }
-    }
+  //   for (const [key, value] of Object.entries(formData)) {
+  //     if (value instanceof File) {
+  //       console.log('value -->',value);
+  //       data.append(key, value);
+  //     } else if (typeof value === 'boolean') {
+  //       data.append(key, value ? 'true' : 'false');
+  //     } else if (typeof value === 'number') {
+  //       data.append(key, value.toString());
+  //     } else {
+  //       data.append(key, String(value));
+  //     }
+  //   }
+  //   console.log('data -->',data);
+  //   if (editingUser) {
+  //     data.append("id", editingUser.id); // necesario para updateBook
+  //     await dispatch(updateBook(data as FormData & { id: string }));
+  //   } else {
+  //     await dispatch(createBook(data));
+  //   }
   
-    if (editingUser) {
-      data.append("id", editingUser.id); // necesario para updateBook
-      await dispatch(updateBook(data as FormData & { id: string }));
-    } else {
-      await dispatch(createBook(data));
-    }
-  
-    dispatch(
-      fetchBooks({
-        page: page + 1,
-        limit: rowsPerPage,
-        search: searchTerm,
-        sortBy,
-        sortDir: sortDirection,
-      })
-    );
-    setEditingUser(null);
-  };
+  //   dispatch(
+  //     fetchBooks({
+  //       page: page + 1,
+  //       limit: rowsPerPage,
+  //       search: searchTerm,
+  //       sortBy,
+  //       sortDir: sortDirection,
+  //     })
+  //   );
+  //   setEditingUser(null);
+  // };
   
 
   // const handleCreateOrUpdate = async (formData: Partial<Libros>) => {
@@ -178,37 +194,57 @@ const Books = () => {
   //   setEditingUser(null);
   // };
   
-  // const handleCreateOrUpdate = async (formData: Partial<Libros>) => {
-  //   if (editingUser) {
-  //     await dispatch(updateBook({
-  //       id: editingUser.id,
-  //       titulo: formData.titulo!,
-  //       autor: formData.autor!,
-  //       genero_id: formData.genero_id!,
-  //       editorial_id: formData.editorial_id!,
-  //       precio: Number(formData.precio!),
-  //       disponible: formData.disponible! === true ? true : false,}));
-  //   } else {
-  //     await dispatch(createBook({
-  //       titulo: formData.titulo!,
-  //       autor: formData.autor!,
-  //       genero_id: formData.genero_id!,
-  //       editorial_id: formData.editorial_id!,
-  //       precio: Number(formData.precio!),
-  //       disponible: formData.disponible! === true ? true : false,}));
-  //   }
-  //   // 🔁 Volver a cargar data con filtros actuales
-  //   dispatch(
-  //     fetchBooks({
-  //       page: page + 1,
-  //       limit: rowsPerPage,
-  //       search: searchTerm,
-  //       sortBy,
-  //       sortDir: sortDirection,
-  //     })
-  //   );
-  //   setEditingUser(null);
-  // };
+  const handleCreateOrUpdate = async (formData: Partial<Libros>) => {
+    let imagen = formData.imagen as string;
+
+    if (formData.imagen && typeof formData.imagen === "object" && "name" in formData.imagen) {
+      const ext = (formData.imagen as File).name.split('.').pop();
+      const newName = `${uuidv4()}.${ext}`;
+      const newPath = `/uploads/libros/${newName}`;
+    
+      // Copia en public (solo para desarrollo o previsualización rápida)
+      const reader = new FileReader();
+      reader.onload = () => {
+        const a = document.createElement("a");
+        a.href = reader.result as string;
+        a.download = newName;
+        a.style.display = "none";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      };
+      reader.readAsDataURL(formData.imagen as File);
+    
+      imagen = newPath;
+    }
+
+    const payload = {
+      titulo: formData.titulo!,
+      autor: formData.autor!,
+      genero_id: formData.genero_id!,
+      editorial_id: formData.editorial_id!,
+      precio: Number(formData.precio!),
+      disponible:  formData.disponible! === true ? true : false,
+      imagen,
+    };
+
+    if (editingUser) {
+      await dispatch(updateBook({...payload, id: editingUser.id }));
+    } else {
+      await dispatch(createBook(payload));
+    }
+    // 🔁 Volver a cargar data con filtros actuales
+    dispatch(
+      fetchBooks({
+        page: page + 1,
+        limit: rowsPerPage,
+        search: searchTerm,
+        sortBy,
+        sortDir: sortDirection,
+      })
+    );
+    setEditingUser(null);
+  };
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);

@@ -1,4 +1,3 @@
-import React from "react";
 import { TableCell, TableSortLabel } from "@mui/material";
 
 interface Props {
